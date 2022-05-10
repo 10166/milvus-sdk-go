@@ -231,6 +231,7 @@ func (c *grpcClient) Search(ctx context.Context, collName string, partitions []s
 		return []SearchResult{}, ErrClientNotReady
 	}
 	// 1. check all input params
+	s := time.Now()
 	if err := c.checkCollectionExists(ctx, collName); err != nil {
 		return nil, err
 	}
@@ -279,7 +280,7 @@ func (c *grpcClient) Search(ctx context.Context, collName string, partitions []s
 			return nil, fmt.Errorf("Binary vector does not support metric type %s", metricType)
 		}
 	}
-
+	fmt.Println("first cost:", time.Since(s))
 	// 2. Request milvus service
 	reqs := splitSearchRequest(coll.Schema, partitions, expr, outputFields, vectors, vectorField, metricType, topK, sp)
 	if len(reqs) == 0 {
@@ -335,6 +336,7 @@ func (c *grpcClient) Search(ctx context.Context, collName string, partitions []s
 		}(req)
 	}
 	wg.Wait()
+	fmt.Println("second cost:", time.Since(s))
 	if batchErr != nil {
 		return []SearchResult{}, batchErr
 	}
